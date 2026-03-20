@@ -5,7 +5,18 @@ import { utils, writeFileXLSX } from "xlsx";
 const HEADER_PARTNERSHIP =
   "Parceria PET Saúde Digital / UNESP SJC Odontologia / LABODIGIT UFPB";
 
-const STORAGE_KEY = "app_tabagismo_casos_v1";
+const STORAGE_KEY = "app_tabagismo_casos_v2";
+
+const PRODUTOS_TABACO = [
+  "cigarro",
+  "fumo de rolo",
+  "cigarro de palha",
+  "rapé",
+  "cachimbo",
+  "charuto",
+  "cigarro eletrônico",
+  "narguilé",
+];
 
 const initialState = {
   participante: {
@@ -13,6 +24,8 @@ const initialState = {
     idade: "",
     sexo: "",
     aldeia: "",
+    municipio: "",
+    estado: "",
     etnia: "",
     entrevistador: "",
     data: "",
@@ -22,7 +35,7 @@ const initialState = {
     usoAtual: "",
     frequencia: "",
     idadeInicio: "",
-    produtoPrincipal: "",
+    produtoPrincipal: [],
     cigarrosDia: "",
     exposicaoDomiciliar: "",
     tentativaParar: "",
@@ -45,7 +58,7 @@ const initialState = {
     finalidadeUso: [],
     quemInfluenciou: "",
     percepcaoComunidade: "",
-    produtoLocal: "",
+    produtoLocal: [],
     formaConsumo: [],
     comentarios: "",
   },
@@ -161,13 +174,16 @@ export default function App() {
     () => scoreFagerstrom(form.fagerstrom),
     [form.fagerstrom]
   );
+
   const usoScore = useMemo(() => scoreUso(form.uso), [form.uso]);
+
   const culturalScore = useMemo(
     () => scoreCultural(form.cultural),
     [form.cultural]
   );
 
   const total = fagerScore + usoScore + culturalScore;
+
   const prioridade =
     total <= 7
       ? "Baixa prioridade"
@@ -182,6 +198,8 @@ export default function App() {
       idade: form.participante.idade,
       sexo: form.participante.sexo,
       aldeia: form.participante.aldeia,
+      municipio: form.participante.municipio,
+      estado: form.participante.estado,
       etnia: form.participante.etnia,
       entrevistador: form.participante.entrevistador,
       data: form.participante.data,
@@ -190,7 +208,7 @@ export default function App() {
       usoAtual: form.uso.usoAtual,
       frequencia: form.uso.frequencia,
       idadeInicio: form.uso.idadeInicio,
-      produtoPrincipal: form.uso.produtoPrincipal,
+      produtoPrincipal: form.uso.produtoPrincipal.join(", "),
       cigarrosDiaUso: form.uso.cigarrosDia,
       exposicaoDomiciliar: form.uso.exposicaoDomiciliar,
       tentativaParar: form.uso.tentativaParar,
@@ -212,7 +230,7 @@ export default function App() {
       finalidadeUso: form.cultural.finalidadeUso.join(", "),
       quemInfluenciou: form.cultural.quemInfluenciou,
       percepcaoComunidade: form.cultural.percepcaoComunidade,
-      produtoLocal: form.cultural.produtoLocal,
+      produtoLocal: form.cultural.produtoLocal.join(", "),
       formaConsumo: form.cultural.formaConsumo.join(", "),
       comentarios: form.cultural.comentarios,
 
@@ -249,8 +267,29 @@ export default function App() {
         Idade: caso.idade,
         Sexo: caso.sexo,
         Aldeia: caso.aldeia,
+        Municipio: caso.municipio,
+        Estado: caso.estado,
         Etnia: caso.etnia,
+        Entrevistador: caso.entrevistador,
+        Data: caso.data,
+        Idioma: caso.idioma,
         UsoAtual: caso.usoAtual,
+        Frequencia: caso.frequencia,
+        IdadeInicio: caso.idadeInicio,
+        ProdutoPrincipal: caso.produtoPrincipal,
+        CigarrosDiaUso: caso.cigarrosDiaUso,
+        ExposicaoDomiciliar: caso.exposicaoDomiciliar,
+        TentativaParar: caso.tentativaParar,
+        VezesTentou: caso.vezesTentou,
+        InteresseParar: caso.interesseParar,
+        UsoTradicionalExiste: caso.usoTradicionalExiste,
+        DiferencaTradicionalComercial: caso.diferencaTradicionalComercial,
+        ContextoUso: caso.contextoUso,
+        FinalidadeUso: caso.finalidadeUso,
+        QuemInfluenciou: caso.quemInfluenciou,
+        PercepcaoComunidade: caso.percepcaoComunidade,
+        ProdutoLocal: caso.produtoLocal,
+        FormaConsumo: caso.formaConsumo,
         ScoreUso: caso.scoreUso,
         ScoreFagerstrom: caso.scoreFagerstrom,
         ScoreCultural: caso.scoreCultural,
@@ -303,26 +342,55 @@ export default function App() {
               updateNested("participante", "identificacao", e.target.value)
             }
           />
+
           <input
             placeholder="Idade"
             value={form.participante.idade}
-            onChange={(e) => updateNested("participante", "idade", e.target.value)}
+            onChange={(e) =>
+              updateNested("participante", "idade", e.target.value)
+            }
           />
+
           <input
             placeholder="Sexo"
             value={form.participante.sexo}
-            onChange={(e) => updateNested("participante", "sexo", e.target.value)}
+            onChange={(e) =>
+              updateNested("participante", "sexo", e.target.value)
+            }
           />
+
           <input
             placeholder="Aldeia"
             value={form.participante.aldeia}
-            onChange={(e) => updateNested("participante", "aldeia", e.target.value)}
+            onChange={(e) =>
+              updateNested("participante", "aldeia", e.target.value)
+            }
           />
+
+          <input
+            placeholder="Município"
+            value={form.participante.municipio}
+            onChange={(e) =>
+              updateNested("participante", "municipio", e.target.value)
+            }
+          />
+
+          <input
+            placeholder="Estado"
+            value={form.participante.estado}
+            onChange={(e) =>
+              updateNested("participante", "estado", e.target.value)
+            }
+          />
+
           <input
             placeholder="Etnia"
             value={form.participante.etnia}
-            onChange={(e) => updateNested("participante", "etnia", e.target.value)}
+            onChange={(e) =>
+              updateNested("participante", "etnia", e.target.value)
+            }
           />
+
           <input
             placeholder="Entrevistador"
             value={form.participante.entrevistador}
@@ -330,29 +398,38 @@ export default function App() {
               updateNested("participante", "entrevistador", e.target.value)
             }
           />
+
           <input
             type="date"
             value={form.participante.data}
             onChange={(e) => updateNested("participante", "data", e.target.value)}
           />
+
           <input
             placeholder="Idioma"
             value={form.participante.idioma}
-            onChange={(e) => updateNested("participante", "idioma", e.target.value)}
+            onChange={(e) =>
+              updateNested("participante", "idioma", e.target.value)
+            }
           />
         </div>
       </div>
 
       <div className="tabs">
-        <button className={tab === "uso" ? "active" : ""} onClick={() => setTab("uso")}>
+        <button
+          className={tab === "uso" ? "active" : ""}
+          onClick={() => setTab("uso")}
+        >
           Instrumento 1
         </button>
+
         <button
           className={tab === "fagerstrom" ? "active" : ""}
           onClick={() => setTab("fagerstrom")}
         >
           Instrumento 2
         </button>
+
         <button
           className={tab === "cultural" ? "active" : ""}
           onClick={() => setTab("cultural")}
@@ -364,6 +441,7 @@ export default function App() {
       {tab === "uso" && (
         <div className="card">
           <h2>Questionário de uso de tabaco</h2>
+
           <div className="grid">
             <select
               value={form.uso.usoAtual}
@@ -377,7 +455,9 @@ export default function App() {
 
             <select
               value={form.uso.frequencia}
-              onChange={(e) => updateNested("uso", "frequencia", e.target.value)}
+              onChange={(e) =>
+                updateNested("uso", "frequencia", e.target.value)
+              }
             >
               <option value="">Frequência</option>
               <option value="diario">Diário</option>
@@ -389,19 +469,17 @@ export default function App() {
             <input
               placeholder="Idade de início"
               value={form.uso.idadeInicio}
-              onChange={(e) => updateNested("uso", "idadeInicio", e.target.value)}
-            />
-            <input
-              placeholder="Produto principal"
-              value={form.uso.produtoPrincipal}
               onChange={(e) =>
-                updateNested("uso", "produtoPrincipal", e.target.value)
+                updateNested("uso", "idadeInicio", e.target.value)
               }
             />
+
             <input
               placeholder="Cigarros/unidades por dia"
               value={form.uso.cigarrosDia}
-              onChange={(e) => updateNested("uso", "cigarrosDia", e.target.value)}
+              onChange={(e) =>
+                updateNested("uso", "cigarrosDia", e.target.value)
+              }
             />
 
             <select
@@ -429,15 +507,44 @@ export default function App() {
             <input
               placeholder="Quantas tentativas?"
               value={form.uso.vezesTentou}
-              onChange={(e) => updateNested("uso", "vezesTentou", e.target.value)}
+              onChange={(e) =>
+                updateNested("uso", "vezesTentou", e.target.value)
+              }
             />
-            <input
-              placeholder="Interesse em parar"
+
+            <select
               value={form.uso.interesseParar}
               onChange={(e) =>
                 updateNested("uso", "interesseParar", e.target.value)
               }
-            />
+            >
+              <option value="">Interesse em parar</option>
+              <option value="sim">Sim</option>
+              <option value="nao">Não</option>
+              <option value="talvez">Talvez</option>
+            </select>
+
+            <div className="multi-group">
+              <p>Produto principal (pode marcar mais de um)</p>
+              <div className="checks">
+                {PRODUTOS_TABACO.map((item) => (
+                  <label key={item}>
+                    <input
+                      type="checkbox"
+                      checked={form.uso.produtoPrincipal.includes(item)}
+                      onChange={() =>
+                        updateNested(
+                          "uso",
+                          "produtoPrincipal",
+                          toggleArray(form.uso.produtoPrincipal, item)
+                        )
+                      }
+                    />
+                    {item}
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
 
           <textarea
@@ -451,6 +558,7 @@ export default function App() {
       {tab === "fagerstrom" && (
         <div className="card">
           <h2>Teste de Fagerström</h2>
+
           <div className="grid">
             <select
               value={form.fagerstrom.primeiroCigarro}
@@ -528,6 +636,7 @@ export default function App() {
       {tab === "cultural" && (
         <div className="card">
           <h2>Módulo cultural</h2>
+
           <div className="grid">
             <select
               value={form.cultural.usoTradicionalExiste}
@@ -564,20 +673,46 @@ export default function App() {
                 updateNested("cultural", "quemInfluenciou", e.target.value)
               }
             />
-            <input
-              placeholder="Percepção da comunidade"
+
+            <select
               value={form.cultural.percepcaoComunidade}
               onChange={(e) =>
                 updateNested("cultural", "percepcaoComunidade", e.target.value)
               }
-            />
-            <input
-              placeholder="Produto local mencionado"
-              value={form.cultural.produtoLocal}
-              onChange={(e) =>
-                updateNested("cultural", "produtoLocal", e.target.value)
-              }
-            />
+            >
+              <option value="">Percepção da comunidade</option>
+              <option value="hábito comum na comunidade">
+                Hábito comum na comunidade
+              </option>
+              <option value="hábito incomum na comunidade">
+                Hábito incomum na comunidade
+              </option>
+              <option value="hábito parcialmente tolerado na comunidade">
+                Hábito parcialmente tolerado na comunidade
+              </option>
+            </select>
+          </div>
+
+          <div className="multi-group">
+            <p>Produto local mencionado (pode marcar mais de um)</p>
+            <div className="checks">
+              {PRODUTOS_TABACO.map((item) => (
+                <label key={item}>
+                  <input
+                    type="checkbox"
+                    checked={form.cultural.produtoLocal.includes(item)}
+                    onChange={() =>
+                      updateNested(
+                        "cultural",
+                        "produtoLocal",
+                        toggleArray(form.cultural.produtoLocal, item)
+                      )
+                    }
+                  />
+                  {item}
+                </label>
+              ))}
+            </div>
           </div>
 
           <h3>Contextos de uso</h3>
@@ -604,7 +739,7 @@ export default function App() {
 
           <h3>Finalidade atribuída</h3>
           <div className="checks">
-            {["ritual", "social", "alivio", "dependencia", "costume"].map(
+            {["ritual", "social", "alívio", "dependência", "costume"].map(
               (item) => (
                 <label key={item}>
                   <input
@@ -626,7 +761,7 @@ export default function App() {
 
           <h3>Forma de consumo</h3>
           <div className="checks">
-            {["fumado", "mascado", "rape", "cachimbo", "artesanal"].map(
+            {["fumado", "mascado", "rapé", "cachimbo", "artesanal"].map(
               (item) => (
                 <label key={item}>
                   <input
@@ -658,17 +793,22 @@ export default function App() {
 
       <div className="card result">
         <h2>Resumo do caso atual</h2>
+
         <p>
-          <strong>Instrumento 1:</strong> {usoScore} pontos — {classifyUso(usoScore)}
+          <strong>Instrumento 1:</strong> {usoScore} pontos —{" "}
+          {classifyUso(usoScore)}
         </p>
+
         <p>
           <strong>Instrumento 2:</strong> {fagerScore} pontos — dependência{" "}
           {classifyFagerstrom(fagerScore)}
         </p>
+
         <p>
           <strong>Instrumento 3:</strong> {culturalScore} pontos —{" "}
           {classifyCultural(culturalScore)}
         </p>
+
         <p>
           <strong>Prioridade final:</strong> {prioridade}
         </p>
@@ -698,6 +838,8 @@ export default function App() {
                   <th>#</th>
                   <th>Identificação</th>
                   <th>Aldeia</th>
+                  <th>Município</th>
+                  <th>Estado</th>
                   <th>Uso atual</th>
                   <th>Score total</th>
                   <th>Prioridade</th>
@@ -710,6 +852,8 @@ export default function App() {
                     <td>{index + 1}</td>
                     <td>{caso.identificacao}</td>
                     <td>{caso.aldeia}</td>
+                    <td>{caso.municipio}</td>
+                    <td>{caso.estado}</td>
                     <td>{caso.usoAtual}</td>
                     <td>{caso.scoreTotal}</td>
                     <td>{caso.prioridadeFinal}</td>
