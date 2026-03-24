@@ -10,7 +10,7 @@ body {
 }
 
 .container {
-  max-width: 1181px;
+  max-width: 1180px;
   margin: 0 auto;
   padding: 24px;
 }
@@ -147,6 +147,12 @@ textarea {
   opacity: 0.96;
 }
 
+.buttons button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .checks {
   display: flex;
   flex-wrap: wrap;
@@ -271,6 +277,16 @@ p {
   margin: 0 0 8px;
   font-weight: 600;
   color: #334155;
+}
+
+.status-envio {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+  color: #155e75;
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {

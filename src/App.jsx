@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
-import { utils, writeFileXLSX } from "xlsx";
 
 const HEADER_PARTNERSHIP =
   "Parceria PET Saúde Digital / UNESP SJC Odontologia / LABODIGIT UFPB";
 
-const STORAGE_KEY = "app_tabagismo_casos_v2";
+const STORAGE_KEY = "app_tabagismo_casos_v3";
+const GOOGLE_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbxwFvKybwSJjYVpJSjlkqgIMFP3Va50qsJn6HgMDPY_DjnSRiN1CEbM6huztc7v9Wk0/exec";
 
 const PRODUTOS_TABACO = [
   "cigarro",
@@ -128,8 +129,9 @@ function scoreCultural(cultural) {
   if (cultural.diferencaTradicionalComercial === "nao") score += 2;
   if (cultural.contextoUso.includes("ritual")) score += 1;
   if (cultural.contextoUso.includes("cotidiano")) score += 2;
-  if (cultural.finalidadeUso.includes("dependencia")) score += 2;
+  if (cultural.finalidadeUso.includes("dependência")) score += 2;
   if (cultural.finalidadeUso.includes("social")) score += 1;
+  if (cultural.finalidadeUso.includes("dependencia")) score += 2;
 
   return Math.min(score, 8);
 }
@@ -155,6 +157,8 @@ export default function App() {
   const [tab, setTab] = useState("uso");
   const [form, setForm] = useState(initialState);
   const [casos, setCasos] = useState(loadCasesFromStorage);
+  const [enviandoSheets, setEnviandoSheets] = useState(false);
+  const [mensagemEnvio, setMensagemEnvio] = useState("");
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(casos));
@@ -242,71 +246,89 @@ export default function App() {
       classificacaoCultural: classifyCultural(culturalScore),
       scoreTotal: total,
       prioridadeFinal: prioridade,
+      dataRegistro: new Date().toISOString(),
     };
 
     setCasos((prev) => [...prev, novoCaso]);
     setForm(initialState);
     setTab("uso");
+    setMensagemEnvio("");
     alert("Caso salvo com sucesso.");
   };
 
-  const exportExcel = () => {
+  const enviarParaGoogleSheets = async () => {
     if (casos.length === 0) {
       alert("Nenhum caso foi salvo ainda.");
       return;
     }
 
-    const wb = utils.book_new();
+    setEnviandoSheets(true);
+    setMensagemEnvio("");
 
-    const wsTodosCasos = utils.json_to_sheet(casos);
+    const resumo = casos.map((caso, index) => ({
+      casoNumero: index + 1,
+      identificacao: caso.identificacao,
+      idade: caso.idade,
+      sexo: caso.sexo,
+      aldeia: caso.aldeia,
+      municipio: caso.municipio,
+      estado: caso.estado,
+      etnia: caso.etnia,
+      entrevistador: caso.entrevistador,
+      data: caso.data,
+      usoAtual: caso.usoAtual,
+      frequencia: caso.frequencia,
+      produtoPrincipal: caso.produtoPrincipal,
+      scoreUso: caso.scoreUso,
+      scoreFagerstrom: caso.scoreFagerstrom,
+      scoreCultural: caso.scoreCultural,
+      scoreTotal: caso.scoreTotal,
+      prioridadeFinal: caso.prioridadeFinal,
+    }));
 
-    const wsResumo = utils.json_to_sheet(
-      casos.map((caso, index) => ({
-        Caso: index + 1,
-        Identificacao: caso.identificacao,
-        Idade: caso.idade,
-        Sexo: caso.sexo,
-        Aldeia: caso.aldeia,
-        Municipio: caso.municipio,
-        Estado: caso.estado,
-        Etnia: caso.etnia,
-        Entrevistador: caso.entrevistador,
-        Data: caso.data,
-        Idioma: caso.idioma,
-        UsoAtual: caso.usoAtual,
-        Frequencia: caso.frequencia,
-        IdadeInicio: caso.idadeInicio,
-        ProdutoPrincipal: caso.produtoPrincipal,
-        CigarrosDiaUso: caso.cigarrosDiaUso,
-        ExposicaoDomiciliar: caso.exposicaoDomiciliar,
-        TentativaParar: caso.tentativaParar,
-        VezesTentou: caso.vezesTentou,
-        InteresseParar: caso.interesseParar,
-        UsoTradicionalExiste: caso.usoTradicionalExiste,
-        DiferencaTradicionalComercial: caso.diferencaTradicionalComercial,
-        ContextoUso: caso.contextoUso,
-        FinalidadeUso: caso.finalidadeUso,
-        QuemInfluenciou: caso.quemInfluenciou,
-        PercepcaoComunidade: caso.percepcaoComunidade,
-        ProdutoLocal: caso.produtoLocal,
-        FormaConsumo: caso.formaConsumo,
-        ScoreUso: caso.scoreUso,
-        ScoreFagerstrom: caso.scoreFagerstrom,
-        ScoreCultural: caso.scoreCultural,
-        ScoreTotal: caso.scoreTotal,
-        PrioridadeFinal: caso.prioridadeFinal,
-      }))
-    );
+    const payload = {
+      origem: "app-tabagismo-indigena",
+      timestampEnvio: new Date().toISOString(),
+      quantidadeCasos: casos.length,
+      casos,
+      resumo,
+    };
 
-    utils.book_append_sheet(wb, wsTodosCasos, "Casos_Cadastrados");
-    utils.book_append_sheet(wb, wsResumo, "Resumo");
+    try {
+      const response = await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-    writeFileXLSX(wb, "casos_tabagismo_coletivo.xlsx");
+      const texto = await response.text();
+
+      if (!response.ok) {
+        throw new Error(`Erro HTTP ${response.status}: ${texto}`);
+      }
+
+      setMensagemEnvio("Dados enviados com sucesso para o Google Sheets.");
+      alert("Dados enviados com sucesso para o Google Sheets.");
+      console.log("Resposta do Apps Script:", texto);
+    } catch (error) {
+      console.error("Erro ao enviar para Google Sheets:", error);
+      setMensagemEnvio(
+        "Não foi possível enviar os dados. Verifique o Apps Script e as permissões."
+      );
+      alert(
+        "Erro ao enviar para o Google Sheets. Verifique o Apps Script e as permissões."
+      );
+    } finally {
+      setEnviandoSheets(false);
+    }
   };
 
   const resetAll = () => {
     setForm(initialState);
     setTab("uso");
+    setMensagemEnvio("");
   };
 
   const removerCaso = (id) => {
@@ -320,6 +342,7 @@ export default function App() {
     if (!confirmar) return;
     setCasos([]);
     localStorage.removeItem(STORAGE_KEY);
+    setMensagemEnvio("");
   };
 
   return (
@@ -813,9 +836,13 @@ export default function App() {
           <strong>Prioridade final:</strong> {prioridade}
         </p>
 
+        {mensagemEnvio && <div className="status-envio">{mensagemEnvio}</div>}
+
         <div className="buttons">
           <button onClick={salvarCaso}>Salvar caso</button>
-          <button onClick={exportExcel}>Exportar todos para Excel</button>
+          <button onClick={enviarParaGoogleSheets} disabled={enviandoSheets}>
+            {enviandoSheets ? "Enviando..." : "Enviar todos para Google Sheets"}
+          </button>
           <button onClick={resetAll}>Limpar formulário</button>
         </div>
       </div>
