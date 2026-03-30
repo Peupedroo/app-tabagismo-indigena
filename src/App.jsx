@@ -417,6 +417,7 @@ export default function App() {
 
       const response = await fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
+        mode: "no-cors",
         body: formData,
       });
 
