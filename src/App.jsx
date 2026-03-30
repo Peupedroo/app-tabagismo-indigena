@@ -7,7 +7,7 @@ const HEADER_PARTNERSHIP =
 const STORAGE_KEY = "app_tabagismo_casos_v6";
 
 const GOOGLE_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbzX2KSE1TWq94R6_iOJf7h9-Bfs97WeODJYGcZQTh41apzf6V2tghapJltrvj_lX8v1mA/exec";
+  "https://script.google.com/macros/s/AKfycbzOygrv3Df4UCykmRRPfOyzqDD8jdzzc7e4vsamzORCvsf-tZiP2iZwVld1vebKSpgAsg/exec";
 
 const PRODUTOS_TABACO = [
   "cigarro industrializado",
