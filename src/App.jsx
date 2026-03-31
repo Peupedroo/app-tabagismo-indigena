@@ -400,52 +400,27 @@ export default function App() {
       return;
     }
 
-    setEnviandoSheets(true);
-    setMensagemEnvio("");
-
     try {
-      const formData = new FormData();
-      formData.append(
-        "payload",
-        JSON.stringify({
-          origem: "app-tabagismo-indigena",
-          timestampEnvio: new Date().toISOString(),
-          quantidadeCasos: casos.length,
-          casos,
-        })
-      );
-
-      const response = await fetch(GOOGLE_SCRIPT_URL, {
+      await fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
-        mode: "no-cors",
-        body: formData,
+        mode: "no-cors", // 🔥 evita CORS
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `payload=${encodeURIComponent(
+            JSON.stringify({
+              casos: casos,
+            })
+        )}`,
       });
 
-      const texto = await response.text();
-      let json = {};
+      alert("Dados enviados para o Google Sheets 🚀");
 
-      try {
-        json = JSON.parse(texto);
-      } catch {
-        json = {};
-      }
-
-      if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
-      if (json.sucesso === false) {
-        throw new Error(json.mensagem || "Falha no envio.");
-      }
-
-      setMensagemEnvio("Dados enviados com sucesso para o Google Sheets.");
-      alert("Dados enviados com sucesso para o Google Sheets.");
     } catch (error) {
-      console.error("Erro ao enviar para Google Sheets:", error);
-      setMensagemEnvio("Não foi possível enviar os dados ao Google Sheets.");
-      alert("Erro ao enviar para o Google Sheets.");
-    } finally {
-      setEnviandoSheets(false);
+      console.error(error);
+      alert("Erro ao enviar ❌");
     }
   };
-
   const resetAll = () => {
     setForm(initialState);
     setTab("uso");
