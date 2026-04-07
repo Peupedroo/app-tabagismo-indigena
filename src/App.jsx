@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./index.css";
+import logo from "./assets/logo.png";
 
 const HEADER_PARTNERSHIP =
   "Parceria PET Saúde Digital Unifal e UFAM / UNESP SJC Odontologia / LABODIGIT UFPB";
@@ -7,7 +8,7 @@ const HEADER_PARTNERSHIP =
 const STORAGE_KEY = "app_tabagismo_casos_v6";
 
 const GOOGLE_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbzOygrv3Df4UCykmRRPfOyzqDD8jdzzc7e4vsamzORCvsf-tZiP2iZwVld1vebKSpgAsg/exec";
+  "https://script.google.com/macros/s/AKfycbxoT_1U2HJX6dQDXOFCYpVyulxvR_AjHGEEo08eqB5EdMt1k4Irv1_2vWD0wma8Ajpf/exec";
 
 const PRODUTOS_TABACO = [
   "cigarro industrializado",
@@ -400,27 +401,54 @@ export default function App() {
       return;
     }
 
+    setEnviandoSheets(true);
+    setMensagemEnvio("");
+
     try {
-      await fetch(GOOGLE_SCRIPT_URL, {
+      const formData = new FormData();
+      formData.append(
+        "payload",
+        JSON.stringify({
+          origem: "app-tabagismo-indigena",
+          timestampEnvio: new Date().toISOString(),
+          quantidadeCasos: casos.length,
+          casos,
+        })
+      );
+
+      const response = await fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
-        mode: "no-cors", // 🔥 evita CORS
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: `payload=${encodeURIComponent(
-            JSON.stringify({
-              casos: casos,
-            })
-        )}`,
+        body: formData,
       });
 
-      alert("Dados enviados para o Google Sheets 🚀");
+      const texto = await response.text();
+      let json = {};
 
+      try {
+        json = JSON.parse(texto);
+      } catch {
+        json = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(`Erro HTTP ${response.status}`);
+      }
+
+      if (json.sucesso === false) {
+        throw new Error(json.mensagem || "Falha no envio.");
+      }
+
+      setMensagemEnvio("Dados enviados com sucesso para o Google Sheets.");
+      alert("Dados enviados com sucesso para o Google Sheets.");
     } catch (error) {
-      console.error(error);
-      alert("Erro ao enviar ❌");
+      console.error("Erro ao enviar para Google Sheets:", error);
+      setMensagemEnvio("Não foi possível enviar os dados ao Google Sheets.");
+      alert("Erro ao enviar para o Google Sheets.");
+    } finally {
+      setEnviandoSheets(false);
     }
   };
+
   const resetAll = () => {
     setForm(initialState);
     setTab("uso");
@@ -442,11 +470,19 @@ export default function App() {
   return (
     <div className="container">
       <header className="hero">
-        <div className="hero-top">{HEADER_PARTNERSHIP}</div>
-        <h1>Avaliação do hábito do tabagismo em população indígena</h1>
-        <p className="subtitle">
-          App com questionário de uso, Fagerström, módulo cultural e AUDIT.
-        </p>
+        <div className="hero-brand">
+          <img
+            src={logo}
+            alt="Logo Ybytu Livre"
+            className="hero-logo"
+            style={{ width: "155px" }}
+          />
+          <div className="hero-text">
+            <div className="hero-top">{HEADER_PARTNERSHIP}</div>
+            <h1>Ybytu Livre</h1>
+            <p className="subtitle">Apoio para parar de fumar</p>
+          </div>
+        </div>
       </header>
 
       <div className="card">
@@ -457,7 +493,7 @@ export default function App() {
 
         <div className="grid">
           <input
-            placeholder="Identificação"
+            placeholder="Nome do usuário"
             value={form.participante.identificacao}
             onChange={(e) =>
               updateNested("participante", "identificacao", e.target.value)
@@ -502,6 +538,8 @@ export default function App() {
           />
           <input
             type="date"
+            aria-label="Data de entrevista"
+            title="Data de entrevista"
             value={form.participante.data}
             onChange={(e) => updateNested("participante", "data", e.target.value)}
           />
@@ -795,7 +833,6 @@ export default function App() {
               onChange={(e) =>
                 updateNested("fagerstrom", "primeiroCigarro", e.target.value)
               }
-              disabled={form.fagerstrom.tipoUsuario !== "cigarro_industrializado"}
             >
               <option value="">Primeiro cigarro após acordar</option>
               <option value="5">Até 5 minutos</option>
@@ -809,7 +846,6 @@ export default function App() {
               onChange={(e) =>
                 updateNested("fagerstrom", "dificuldadeLocais", e.target.value)
               }
-              disabled={form.fagerstrom.tipoUsuario !== "cigarro_industrializado"}
             >
               <option value="">Dificuldade em locais proibidos?</option>
               <option value="sim">Sim</option>
@@ -821,7 +857,6 @@ export default function App() {
               onChange={(e) =>
                 updateNested("fagerstrom", "cigarroMaisDificil", e.target.value)
               }
-              disabled={form.fagerstrom.tipoUsuario !== "cigarro_industrializado"}
             >
               <option value="">Mais difícil abandonar</option>
               <option value="primeiro">Primeiro da manhã</option>
@@ -833,7 +868,6 @@ export default function App() {
               onChange={(e) =>
                 updateNested("fagerstrom", "cigarrosDia", e.target.value)
               }
-              disabled={form.fagerstrom.tipoUsuario !== "cigarro_industrializado"}
             >
               <option value="">Quantos cigarros por dia?</option>
               <option value="10">10 ou menos</option>
@@ -847,7 +881,6 @@ export default function App() {
               onChange={(e) =>
                 updateNested("fagerstrom", "fumaMaisManha", e.target.value)
               }
-              disabled={form.fagerstrom.tipoUsuario !== "cigarro_industrializado"}
             >
               <option value="">Fuma mais pela manhã?</option>
               <option value="sim">Sim</option>
@@ -859,7 +892,6 @@ export default function App() {
               onChange={(e) =>
                 updateNested("fagerstrom", "fumaDoente", e.target.value)
               }
-              disabled={form.fagerstrom.tipoUsuario !== "cigarro_industrializado"}
             >
               <option value="">Fuma quando está doente?</option>
               <option value="sim">Sim</option>
@@ -1263,7 +1295,7 @@ export default function App() {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>Identificação</th>
+                  <th>Nome do usuário</th>
                   <th>Residência</th>
                   <th>Aldeia</th>
                   <th>Município</th>
