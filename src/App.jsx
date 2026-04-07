@@ -3,12 +3,12 @@ import "./index.css";
 import logo from "./assets/logo.png";
 
 const HEADER_PARTNERSHIP =
-  "Ybytu Livre • PET Saúde Digital Unifal e UFAM • UNESP SJC Odontologia • LABODIGIT UFPB";
+  "Parceria PET Saúde Digital Unifal e UFAM / UNESP SJC Odontologia / LABODIGIT UFPB";
 
 const STORAGE_KEY = "app_tabagismo_casos_v6";
 
 const GOOGLE_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbyyKlYxY78A5IaOOt_ceWc1yHwsZM0HRlHeF6RiQQgg-Z_eypPpA25EZqhKjC_kPF2geA/exec";
+  "https://script.google.com/macros/s/AKfycbzOygrv3Df4UCykmRRPfOyzqDD8jdzzc7e4vsamzORCvsf-tZiP2iZwVld1vebKSpgAsg/exec";
 
 const PRODUTOS_TABACO = [
   "cigarro industrializado",
@@ -430,7 +430,10 @@ export default function App() {
         json = {};
       }
 
-      if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Erro HTTP ${response.status}`);
+      }
+
       if (json.sucesso === false) {
         throw new Error(json.mensagem || "Falha no envio.");
       }
@@ -535,7 +538,6 @@ export default function App() {
           />
           <input
             type="date"
-            placeholder="Data de entrevista"
             aria-label="Data de entrevista"
             title="Data de entrevista"
             value={form.participante.data}
@@ -831,7 +833,6 @@ export default function App() {
               onChange={(e) =>
                 updateNested("fagerstrom", "primeiroCigarro", e.target.value)
               }
-              disabled={form.fagerstrom.tipoUsuario !== "cigarro_industrializado"}
             >
               <option value="">Primeiro cigarro após acordar</option>
               <option value="5">Até 5 minutos</option>
@@ -845,7 +846,6 @@ export default function App() {
               onChange={(e) =>
                 updateNested("fagerstrom", "dificuldadeLocais", e.target.value)
               }
-              disabled={form.fagerstrom.tipoUsuario !== "cigarro_industrializado"}
             >
               <option value="">Dificuldade em locais proibidos?</option>
               <option value="sim">Sim</option>
@@ -857,7 +857,6 @@ export default function App() {
               onChange={(e) =>
                 updateNested("fagerstrom", "cigarroMaisDificil", e.target.value)
               }
-              disabled={form.fagerstrom.tipoUsuario !== "cigarro_industrializado"}
             >
               <option value="">Mais difícil abandonar</option>
               <option value="primeiro">Primeiro da manhã</option>
@@ -869,7 +868,6 @@ export default function App() {
               onChange={(e) =>
                 updateNested("fagerstrom", "cigarrosDia", e.target.value)
               }
-              disabled={form.fagerstrom.tipoUsuario !== "cigarro_industrializado"}
             >
               <option value="">Quantos cigarros por dia?</option>
               <option value="10">10 ou menos</option>
@@ -883,7 +881,6 @@ export default function App() {
               onChange={(e) =>
                 updateNested("fagerstrom", "fumaMaisManha", e.target.value)
               }
-              disabled={form.fagerstrom.tipoUsuario !== "cigarro_industrializado"}
             >
               <option value="">Fuma mais pela manhã?</option>
               <option value="sim">Sim</option>
@@ -895,7 +892,6 @@ export default function App() {
               onChange={(e) =>
                 updateNested("fagerstrom", "fumaDoente", e.target.value)
               }
-              disabled={form.fagerstrom.tipoUsuario !== "cigarro_industrializado"}
             >
               <option value="">Fuma quando está doente?</option>
               <option value="sim">Sim</option>
