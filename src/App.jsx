@@ -395,59 +395,38 @@ export default function App() {
     alert("Caso salvo com sucesso.");
   };
 
-  const enviarParaGoogleSheets = async () => {
-    if (casos.length === 0) {
-      alert("Nenhum caso foi salvo ainda.");
-      return;
-    }
+const enviarParaGoogleSheets = async () => {
+  if (casos.length === 0) {
+    alert("Nenhum caso foi salvo ainda.");
+    return;
+  }
 
-    setEnviandoSheets(true);
-    setMensagemEnvio("");
+  setEnviandoSheets(true);
 
-    try {
-      const formData = new FormData();
-      formData.append(
-        "payload",
-        JSON.stringify({
+  try {
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      body: new URLSearchParams({
+        payload: JSON.stringify({
           origem: "app-tabagismo-indigena",
           timestampEnvio: new Date().toISOString(),
           quantidadeCasos: casos.length,
           casos,
-        })
-      );
+        }),
+      }),
+    });
 
-      const response = await fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        body: formData,
-      });
+    const texto = await response.text();
+    console.log("Resposta:", texto);
 
-      const texto = await response.text();
-      let json = {};
-
-      try {
-        json = JSON.parse(texto);
-      } catch {
-        json = {};
-      }
-
-      if (!response.ok) {
-        throw new Error(`Erro HTTP ${response.status}`);
-      }
-
-      if (json.sucesso === false) {
-        throw new Error(json.mensagem || "Falha no envio.");
-      }
-
-      setMensagemEnvio("Dados enviados com sucesso para o Google Sheets.");
-      alert("Dados enviados com sucesso para o Google Sheets.");
-    } catch (error) {
-      console.error("Erro ao enviar para Google Sheets:", error);
-      setMensagemEnvio("Não foi possível enviar os dados ao Google Sheets.");
-      alert("Erro ao enviar para o Google Sheets.");
-    } finally {
-      setEnviandoSheets(false);
-    }
-  };
+    alert("Dados enviados 🚀");
+  } catch (error) {
+    console.error(error);
+    alert("Erro ao enviar ❌");
+  } finally {
+    setEnviandoSheets(false);
+  }
+};
 
   const resetAll = () => {
     setForm(initialState);
