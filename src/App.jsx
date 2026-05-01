@@ -172,7 +172,7 @@ const initialState = {
     q7: "",
     q8: "",
     q9: "",
-    q10: "",
+    q9: "",
   },
 };
 
